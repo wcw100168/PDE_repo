@@ -17,7 +17,7 @@ def jacobi_p_derivative(x: np.ndarray, alpha: float, beta: float, n: int) -> np.
     """
     if n == 0:
         return np.zeros_like(x)
-    coeff = 0.5 * np.sqrt(n * (n + alpha + beta + 1.0))
+    coeff = 0.5 * (n + alpha + beta + 1.0)
     p_classical = eval_jacobi(n - 1, alpha + 1.0, beta + 1.0, x)
     
     # Normalization factor for P_n^{(alpha, beta)}
@@ -78,18 +78,72 @@ def grad_vandermonde_2d_dubiner(r: np.ndarray, s: np.ndarray, N: int) -> tuple[n
     return Vr, Vs
 
 
-def differentiation_matrices_weighted(V: np.ndarray, Vr: np.ndarray, Vs: np.ndarray, W: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def differentiation_matrices_weighted(
+    V: np.ndarray, 
+    Vr: np.ndarray, 
+    Vs: np.ndarray, 
+    W: np.ndarray,
+    E_face: list[np.ndarray] = None,
+    w_face: list[np.ndarray] = None
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Compute reference nodal differentiation matrices Dr, Ds:
-        Projection: P_c = (V^T * W * V)^{-1} * V^T * W
-        Dr = Vr * P_c
-        Ds = Vs * P_c
+    Compute reference nodal differentiation matrices Dr, Ds with Full-SBP boundary correction.
+    
+    Parameters
+    ----------
+    V, Vr, Vs : np.ndarray
+        Volume Vandermonde and gradient matrices.
+    W : np.ndarray
+        Volume quadrature weights (sum to 1.0).
+    E_face : list[np.ndarray], optional
+        List of 3 Boolean extraction matrices.
+    w_face : list[np.ndarray], optional
+        List of 3 face quadrature weight arrays.
+        
+    Returns
+    -------
+    Dr, Ds : np.ndarray
+        Full-SBP differentiation matrices.
     """
     W_diag = np.diag(W) if W.ndim == 1 else W
+    W_diag = 2.0 * W_diag  # Reference triangle area is 2.0
+    
     M_hat = V.T @ W_diag @ V
     rhs = V.T @ W_diag
     P_c = np.linalg.solve(M_hat, rhs)
     
-    Dr = Vr @ P_c
-    Ds = Vs @ P_c
+    D0_r = Vr @ P_c
+    D0_s = Vs @ P_c
+    
+    if E_face is None or w_face is None:
+        return D0_r, D0_s
+        
+    n_vol = V.shape[0]
+    Br = np.zeros((n_vol, n_vol), dtype=float)
+    Bs = np.zeros((n_vol, n_vol), dtype=float)
+    
+    # Normal vectors scaled by length (equivalent to dsdt and -drdt)
+    n_r_scaled = {0: 2.0, 1: -2.0, 2: 0.0}
+    n_s_scaled = {0: 2.0, 1: 0.0, 2: -2.0}
+    
+    for f in range(3):
+        E = E_face[f]
+        w = w_face[f]
+        B_f = E.T @ np.diag(w) @ E
+        Br += n_r_scaled[f] * B_f
+        Bs += n_s_scaled[f] * B_f
+        
+    P = V @ P_c
+    I_minus_P = np.eye(n_vol) - P
+    I_plus_P_T = np.eye(n_vol) + P.T
+    
+    W_inv = np.linalg.inv(W_diag)
+    
+    # Full-SBP correction that preserves exactness for polynomials (D 1 = 0)
+    delta_Dr = 0.5 * W_inv @ (I_plus_P_T @ Br @ I_minus_P)
+    delta_Ds = 0.5 * W_inv @ (I_plus_P_T @ Bs @ I_minus_P)
+    
+    Dr = D0_r + delta_Dr
+    Ds = D0_s + delta_Ds
+    
     return Dr, Ds

@@ -22,8 +22,10 @@ if str(workspace) not in sys.path:
     sys.path.insert(0, str(workspace))
 
 from src.geometry.sphere_mesh import build_octa_sphere_mesh
-from src.geometry.quadrature import get_triangle_quadrature
+from src.geometry.quadrature import get_triangle_quadrature, get_edge_quadrature
 from src.geometry.metrics import compute_geometry_cache
+from src.geometry.connectivity import compute_connectivity
+from src.geometry.trace import build_trace_geometry_cache
 from src.geometry.williamson import (
     cosine_bell_initial_condition,
     rigid_body_rotation_velocity,
@@ -31,11 +33,13 @@ from src.geometry.williamson import (
 )
 from src.operators.basis import vandermonde_2d_dubiner
 from src.operators.derivatives import grad_vandermonde_2d_dubiner, differentiation_matrices_weighted
+from src.operators.sbp import compute_polynomial_projection_operator, compute_face_operators
 from src.solver.formulations import (
     rhs_conservative,
     rhs_split2_twoterm,
     rhs_split3_threeterm,
 )
+from src.solver.fluxes import surface_lift_correction_conservative, surface_lift_correction_split
 from src.solver.time_stepper import lsrk45_step
 
 
@@ -58,18 +62,32 @@ def run_advection_demo(
     
     r_nodes, s_nodes, W = get_triangle_quadrature(order=order)
     Np = len(r_nodes)
+    Nf = order + 1
     print(f"      Quadrature nodes per element Np = {Np} (Order N={order})")
+    print(f"      Trace nodes per face Nf = {Nf}")
     
     geom = compute_geometry_cache(mesh, r_nodes, s_nodes)
+    conn = compute_connectivity(mesh.elements)
+    trace = build_trace_geometry_cache(mesh, Nf)
     
-    # 2. Build SBP differentiation matrices with skew-symmetric SBP volume correction
-    print("[2/4] Constructing Dubiner basis & SBP operators...")
+    # 2. Build SBP differentiation matrices and face operators
+    print("[2/4] Constructing Dubiner basis, SBP operators, and Face Lifts...")
     V = vandermonde_2d_dubiner(r_nodes, s_nodes, order)
     Vr, Vs = grad_vandermonde_2d_dubiner(r_nodes, s_nodes, order)
-    Dr_base, Ds_base = differentiation_matrices_weighted(V, Vr, Vs, W)
     
-    Dr = Dr_base
-    Ds = Ds_base
+    # We now build face extraction matrices FIRST so they can be passed for Full-SBP correction
+    E_face = []
+    L_face = []
+    w_face_list = []
+    for face_id in range(3):
+        r_f, s_f, w_f = get_edge_quadrature(face_id, Nf)
+        E, L = compute_face_operators(r_nodes, s_nodes, W, face_id, w_f, order)
+        E_face.append(E)
+        L_face.append(L)
+        w_face_list.append(w_f)
+        
+    Dr, Ds = differentiation_matrices_weighted(V, Vr, Vs, W, E_face, w_face_list)
+    P, P_c, Minv = compute_polynomial_projection_operator(V, W)
     
     # 3. Explicitly compute velocity field and initial condition
     print("[3/4] Initializing Williamson Case 1 Cosine Bell & rigid-body velocity field...")
@@ -96,13 +114,22 @@ def run_advection_demo(
     q_split3 = q0.copy()
     
     def rhs_func_cons(t_val, q_val):
-        return rhs_conservative(q_val, Dr, Ds, J, u_r, u_s)
+        surf = surface_lift_correction_conservative(
+            q_val, E_face, L_face, trace, conn, J, u_r, u_s, flux_type="central"
+        )
+        return rhs_conservative(q_val, Dr, Ds, J, u_r, u_s, surface_correction=surf)
         
     def rhs_func_split2(t_val, q_val):
-        return rhs_split2_twoterm(q_val, Dr, Ds, J, u_r, u_s)
+        surf = surface_lift_correction_split(
+            q_val, E_face, L_face, trace, conn, J, u_r, u_s, flux_type="central"
+        )
+        return rhs_split2_twoterm(q_val, Dr, Ds, J, u_r, u_s, surface_correction=surf)
         
     def rhs_func_split3(t_val, q_val):
-        return rhs_split3_threeterm(q_val, Dr, Ds, J, u_r, u_s)
+        surf = surface_lift_correction_split(
+            q_val, E_face, L_face, trace, conn, J, u_r, u_s, flux_type="central"
+        )
+        return rhs_split3_threeterm(q_val, Dr, Ds, J, u_r, u_s, surface_correction=surf)
         
     t_start = time.time()
     t_curr = 0.0
@@ -145,3 +172,4 @@ def run_advection_demo(
 
 if __name__ == "__main__":
     run_advection_demo()
+

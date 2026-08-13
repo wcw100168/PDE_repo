@@ -10,19 +10,77 @@ from __future__ import annotations
 import numpy as np
 
 
-def compute_polynomial_projection_operator(V: np.ndarray, W: np.ndarray) -> np.ndarray:
+def compute_polynomial_projection_operator(V: np.ndarray, W: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Compute symmetric polynomial projection operator P:
-        P = V * (V^T * W * V)^{-1} * V^T * W
+    Compute symmetric polynomial projection operator P, coefficients P_c, and modal inverse mass matrix.
+    
+    Returns
+    -------
+    P : np.ndarray
+        Nodal projection matrix V * P_c
+    P_c : np.ndarray
+        Modal projection matrix (V^T W V)^{-1} V^T W
+    Minv : np.ndarray
+        Inverse of modal mass matrix (V^T W V)^{-1}
     """
     W_diag = np.diag(W) if W.ndim == 1 else W
+    W_diag = 2.0 * W_diag  # Reference triangle area is 2.0
     M_hat = V.T @ W_diag @ V
+    Minv = np.linalg.inv(M_hat)
     
-    # Solve M_hat * X = V^T * W
+    # Solve M_hat * X = V^T * W_diag
     rhs = V.T @ W_diag
-    P_c = np.linalg.solve(M_hat, rhs)
+    P_c = Minv @ rhs
     P = V @ P_c
-    return P
+    return P, P_c, Minv
+
+
+def compute_face_operators(
+    r_vol: np.ndarray,
+    s_vol: np.ndarray,
+    W_vol: np.ndarray,
+    face_id: int,
+    w_face: np.ndarray,
+    order: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Compute Face Interpolation (E) and Face Lift (L) matrices using direct extraction.
+    
+    Parameters
+    ----------
+    r_vol, s_vol : np.ndarray
+        Volume node coordinates.
+    W_vol : np.ndarray
+        Volume quadrature weights.
+    face_id : int
+        Face ID (0, 1, or 2).
+    w_face : np.ndarray
+        Face quadrature weights.
+    order : int
+        Polynomial order.
+        
+    Returns
+    -------
+    E : np.ndarray
+        Face extraction matrix (boolean).
+    L : np.ndarray
+        Face lift matrix.
+    """
+    from src.geometry.quadrature import get_triangle_boundary_extraction
+    n_face = order + 1
+    
+    E, indices = get_triangle_boundary_extraction(r_vol, s_vol, face_id, n_face)
+    
+    # L = W_vol^{-1} E^T W_face
+    # W_vol is the scaled volume weights summing to area (2.0)
+    # Wait! W_vol passed in sums to 1.0. The discrete inner product matrix W_diag is 2.0 * W_vol.
+    # So L = (2.0 * W_vol)^{-1} E^T w_face
+    W_diag_inv = 1.0 / (2.0 * W_vol)
+    L = W_diag_inv[:, None] * E.T * w_face[None, :]
+    
+    return E, L
+
+
 
 
 def construct_closed_form_sbp_operator(
