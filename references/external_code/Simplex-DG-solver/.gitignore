@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+outputs/
+*.png

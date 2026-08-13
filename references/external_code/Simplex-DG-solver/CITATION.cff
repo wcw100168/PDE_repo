@@ -1,0 +1,58 @@
+cff-version: 1.2.0
+type: software
+title: Simplex-DG Solver
+abstract: >-
+  A production-grade Python implementation of Spectral Element and
+  Discontinuous Galerkin (DG) methods on simplicial meshes. Provides
+  high-order accurate differential operators, mesh connectivity utilities,
+  coordinate transformations, and convergence validation frameworks for
+  research in numerical methods for partial differential equations.
+
+authors:
+  - family-names: "Developer"
+    given-names: "Senior"
+    email: "dev@example.com"
+    affiliation: "Your Institution"
+
+identifiers:
+  - type: url
+    value: "https://github.com/username/Simplex-DG-solver"
+    description: "GitHub Repository"
+
+keywords:
+  - spectral-methods
+  - discontinuous-galerkin
+  - finite-elements
+  - computational-mathematics
+  - numerical-methods
+  - mesh-connectivity
+  - high-order-accuracy
+  - simplicial-meshes
+
+license: MIT
+version: 0.2.0
+date-released: 2026-04-08
+
+repository-code: https://github.com/username/Simplex-DG-solver
+documentation: https://github.com/username/Simplex-DG-solver/blob/main/.github/copilot-instructions.md
+issue-tracker: https://github.com/username/Simplex-DG-solver/issues
+
+references:
+  - type: article
+    authors:
+      - family-names: "Cockburn"
+        given-names: "Bernardo"
+      - family-names: "Karniadakis"
+        given-names: "George E"
+      - family-names: "Shu"
+        given-names: "Chi-Wang"
+    title: "The Development of Discontinuous Galerkin Methods"
+    journal: "SIAM Review"
+    volume: 45
+    issue: 3
+    pages: "501-532"
+    year: 2003
+    doi: "10.1137/S0036144502419932"
+
+funding:
+  - statement: "This research was supported by..."

@@ -1,0 +1,127 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simplex-dg-solver"
+version = "0.2.0"
+description = "Spectral Element & Discontinuous Galerkin methods on simplicial meshes"
+readme = "docs/README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Senior Developer", email = "dev@example.com"}
+]
+keywords = ["spectral-methods", "discontinuous-galerkin", "finite-elements", "numerical-pde", "simplex"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+dependencies = [
+    "numpy >= 1.21.0",
+    "scipy >= 1.7.0",
+    "matplotlib >= 3.3.0",
+    "pandas >= 1.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest >= 7.0",
+    "pytest-cov >= 3.0",
+    "black >= 22.0",
+    "isort >= 5.10",
+    "mypy >= 0.950",
+    "flake8 >= 4.0",
+    "pylint >= 2.12",
+    "coverage >= 6.0",
+    "pre-commit >= 2.15",
+]
+jupyter = [
+    "jupyter >= 1.0",
+    "notebook >= 6.4",
+    "ipython >= 7.20",
+]
+docs = [
+    "sphinx >= 4.0",
+    "sphinx-rtd-theme >= 1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/username/Simplex-DG-solver"
+Repository = "https://github.com/username/Simplex-DG-solver.git"
+"Bug Tracker" = "https://github.com/username/Simplex-DG-solver/issues"
+Documentation = "https://github.com/username/Simplex-DG-solver/blob/main/.github/copilot-instructions.md"
+
+# Tool configurations
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short --cov=src --cov-report=term-missing"
+markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_mode = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_glob = ["*/setup.py"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+follow_imports = "silent"
+strict_optional = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+
+[tool.codespell]
+skip = "*.ipynb,*.pyc,.git"
