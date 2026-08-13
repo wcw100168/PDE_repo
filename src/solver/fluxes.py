@@ -1,0 +1,26 @@
+"""
+Interface Numerical Fluxes for Discontinuous Galerkin Methods.
+
+Provides Upwind (dissipative) and Central (non-dissipative) numerical flux formulations.
+"""
+
+from __future__ import annotations
+import numpy as np
+
+
+def compute_upwind_flux(u_minus: np.ndarray, u_plus: np.ndarray, velocity_n: np.ndarray) -> np.ndarray:
+    """
+    Compute Upwind Numerical Flux:
+        F^* = 0.5 * velocity_n * (u_minus + u_plus) + 0.5 * |velocity_n| * (u_minus - u_plus)
+    """
+    avg = 0.5 * velocity_n * (u_minus + u_plus)
+    jump = 0.5 * np.abs(velocity_n) * (u_minus - u_plus)
+    return avg + jump
+
+
+def compute_central_flux(u_minus: np.ndarray, u_plus: np.ndarray, velocity_n: np.ndarray) -> np.ndarray:
+    """
+    Compute Central Numerical Flux:
+        F^* = 0.5 * velocity_n * (u_minus + u_plus)
+    """
+    return 0.5 * velocity_n * (u_minus + u_plus)
