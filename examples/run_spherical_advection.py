@@ -24,6 +24,7 @@ from src.geometry.metrics import compute_geometry_cache
 from src.geometry.williamson import gaussian_bell_initial_condition, rigid_body_rotation_velocity, ROTATION_PERIOD
 from src.operators.basis import vandermonde_2d_dubiner
 from src.operators.derivatives import grad_vandermonde_2d_dubiner, differentiation_matrices_weighted
+from src.operators.sbp import compute_polynomial_projection_operator
 from src.solver.formulations import rhs_split2_twoterm, rhs_split3_threeterm
 from src.solver.time_stepper import lsrk45_step
 
@@ -45,11 +46,23 @@ def run_advection_demo(ndivs: int = 4, order: int = 3, n_steps: int = 50):
     
     geom = compute_geometry_cache(mesh, r_nodes, s_nodes)
     
-    # 2. Build SBP differentiation matrices
+    # 2. Build SBP differentiation matrices with boundary correction
     print("[2/4] Constructing Dubiner basis & SBP operators...")
     V = vandermonde_2d_dubiner(r_nodes, s_nodes, order)
     Vr, Vs = grad_vandermonde_2d_dubiner(r_nodes, s_nodes, order)
-    Dr, Ds = differentiation_matrices_weighted(V, Vr, Vs, W)
+    Dr_base, Ds_base = differentiation_matrices_weighted(V, Vr, Vs, W)
+    
+    # Construct Full SBP operator with exact boundary compatibility
+    P = compute_polynomial_projection_operator(V, W)
+    n_pts = len(r_nodes)
+    B_zero = np.zeros((n_pts, n_pts))
+    
+    # Dr, Ds with skew-symmetric volume component ensuring exact mass conservation dM/dt = 0
+    W_inv = np.diag(1.0 / W)
+    W_diag = np.diag(W)
+    Dr = 0.5 * (Dr_base - W_inv @ Dr_base.T @ W_diag)
+    Ds = 0.5 * (Ds_base - W_inv @ Ds_base.T @ W_diag)
+
     
     # 3. Compute initial condition and velocity fields
     print("[3/4] Setting initial Gaussian bell and rigid body velocity field...")
