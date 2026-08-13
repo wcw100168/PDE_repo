@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+
+# Data / Results
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.csv
+!experiments/golden_cases/**/*.csv
+!experiments/golden_cases/**/*.npy
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated reports (can be regenerated)
+reports/progress/*.pdf
+reports/presentations/*.pdf
+
+# Keep raw data but ignore very large files
+raw/**/*.npy
+raw/**/*.h5

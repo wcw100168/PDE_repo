@@ -1,0 +1,39 @@
+# Experiment Configuration Template
+# 複製此文件並重新命名為 EXP00X.yaml
+
+experiment:
+  id: EXP00X
+  objective: "<one-line description>"
+  date: YYYY-MM-DD
+  git_commit: "<commit hash>"
+
+parameters:
+  equation: "<governing equation>"
+  domain: "<domain type>"
+  grid:
+    type: "<LGL | uniform | ...>"
+    N: [16, 32, 64, 128]
+  CFL: 0.4
+  dt: null  # auto-computed from CFL if null
+  final_time: 1.0
+
+solver:
+  spatial: "<method>"
+  temporal: "LSRK5"
+  
+boundary:
+  type: "<periodic | numerical_flux | ...>"
+
+initial_condition:
+  type: "<description>"
+
+expected_result:
+  convergence_order: null
+  L2_error: null
+  stability: null
+
+related:
+  theorem: []
+  lemma: []
+
+status: "planned | running | completed | failed"
