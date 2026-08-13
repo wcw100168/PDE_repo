@@ -1,64 +1,53 @@
 # Project Context
 
-<!-- 
-  此文件是 AI 的「README」。
-  目標：讓任何 AI（Web Chat 或 Agent）在 500–1500 字內了解整個研究。
-  更新頻率：每當研究方向有重大改變時更新。
--->
-
 ## Problem
 
-<!-- 我們在研究什麼？ -->
-
-We study the numerical solution of ...
+We study high-order Summation-by-Parts Discontinuous Galerkin (SBP-DG) methods on three-dimensional embedded spherical surfaces ($\mathbb{S}^2 \subset \mathbb{R}^3$) for hyperbolic conservation laws, specifically scalar advection in global atmospheric modeling and climate prediction.
 
 ## Governing Equation
 
-<!-- 控制方程式 -->
+Scalar advection equation in curvilinear coordinates on the reference triangle $T$:
 
 $$
-\frac{\partial u}{\partial t} + \nabla \cdot F(u) = 0
+\mathcal{J}\frac{\partial q}{\partial t} + \frac{\partial}{\partial \xi}(\mathcal{J} u^\xi q) + \frac{\partial}{\partial \eta}(\mathcal{J} u^\eta q) = 0, \quad (\xi, \eta) \in T
 $$
 
-## Domain
+where $T$ is the reference triangle, $\mathcal{J}$ is the Jacobian determinant of the metric mapping, and $u^\xi, u^\eta$ are contravariant velocity components projected onto the local tangent space.
 
-<!-- 計算域的描述 -->
+## Domain & Mesh Geometry
 
-- Physical domain: $\Omega$
-- Reference domain: $\hat{\Omega}$
-- Geometry type: ...
+- Physical domain: Embedded 2-sphere $\mathbb{S}^2 \subset \mathbb{R}^3$
+- Reference domain: Unit reference triangle $T = \{(\xi, \eta) : \xi \ge 0, \eta \ge 0, \xi + \eta \le 1\}$
+- Mesh type: Subdivided Octahedral Spherical Mesh (avoiding pole singularities and complex cubed-sphere corner seams)
+- Mapping: Reference triangle $(\xi,\eta) \to$ Octahedral flat triangle $\mathbf{x}_{\text{flat}} \to$ Radial projection to unit sphere $\mathbf{x}_s = \mathbf{x}_{\text{flat}} / \|\mathbf{x}_{\text{flat}}\|$
 
 ## Numerical Method
 
-<!-- 使用的數值方法 -->
+- Spatial discretization: Nodal Discontinuous Galerkin (DG) with multidimensional Simplex Quadrature and SBP operators
+- Basis / Orthogonalization: Preconditioned Cholesky orthogonalized Vandermonde matrix ($V^T W V = I$) via Jacobi/Dubiner orthogonal polynomials
+- Formulations under study:
+  1. Conservative form
+  2. Two-Term Split form (Split2): Unconditional $L^2$ energy stable
+  3. Three-Term Split form (Split3): Machine-precision discrete mass conserving
+- Temporal discretization: Carpenter & Kennedy 5th-order 4-stage Low-Storage Runge-Kutta (LSRK45)
 
-- Spatial discretization: ...
-- Temporal discretization: ...
-- Basis functions: ...
+## Main Objectives
 
-## Main Objective
-
-<!-- 主要研究目標 -->
-
-Prove that the numerical scheme satisfies:
-
-1. ...
-2. ...
-3. ...
+1. Develop a metric-compatible SBP differential operator that simultaneously achieves strict discrete mass conservation ($\frac{dM}{dt} = 0$) and unconditional $L^2$ energy stability ($\frac{dE}{dt} \le 0$).
+2. Resolve geometric aliasing and discrete Geometric Conservation Law (DGCL) errors induced by non-polynomial metric terms.
+3. Provide rigorous mathematical proofs for stability, modal Cholesky orthogonalization congruence, and Peirce subspace decomposition.
 
 ## Current Research Status
 
-<!-- 目前已建立的結果 -->
-
-The following results have been established:
-
-- [ ] D001 — ...
-- [ ] A001 — ...
-- [ ] L001 — ...
-- [ ] T001 — ...
+- [x] Preconditioned Cholesky modal orthogonalization ($O(10^{-16})$ residual)
+- [x] Closed-form boundary-compatible SBP operator derivation & Peirce subspace decomposition proof
+- [x] Space Congruence Isomorphism Theorem (Theorem 2.1)
+- [x] Comparative numerical analysis of Conservative, Split2, and Split3 formulations
+- [ ] Metric-compatible SBP operator for joint mass conservation & energy stability
+- [ ] Interface projection normal alignment ($R_{\text{proj}}$ elimination)
+- [ ] Extension to Spherical Shallow Water Equations & Euler Equations
 
 ## Current Focus
 
-<!-- 目前正在進行的工作 -->
+Constructing geometric-compatible SBP operators to eliminate mass drift $\epsilon_{\text{mass}}$ in Split2 while suppressing energy source terms $\epsilon_{\text{energy}}$ in Split3.
 
-We are currently investigating ...
