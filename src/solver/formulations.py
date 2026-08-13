@@ -13,7 +13,7 @@ import numpy as np
 
 def rhs_conservative(q: np.ndarray, Dr: np.ndarray, Ds: np.ndarray, J: np.ndarray, u_r: np.ndarray, u_s: np.ndarray) -> np.ndarray:
     """
-    Conservative (Divergence) Formulation RHS:
+    Conservative (Divergence) Formulation Volume RHS:
         dq/dt = - (1/J) * [ Dr * (J * u_r * q) + Ds * (J * u_s * q) ]
     """
     flux_r = J * u_r * q
@@ -24,7 +24,7 @@ def rhs_conservative(q: np.ndarray, Dr: np.ndarray, Ds: np.ndarray, J: np.ndarra
 
 def rhs_split2_twoterm(q: np.ndarray, Dr: np.ndarray, Ds: np.ndarray, J: np.ndarray, u_r: np.ndarray, u_s: np.ndarray) -> np.ndarray:
     """
-    Split2 (Two-Term Split, Energy Stable) Formulation RHS:
+    Split2 (Two-Term Split, Energy Stable) Formulation Volume RHS:
         dq/dt = -0.5 * (1/J) * [ Dr*(J*u_r*q) + J*u_r*(Dr*q) + Ds*(J*u_s*q) + J*u_s*(Ds*q) ]
     """
     term_r1 = (Dr @ (J * u_r * q).T).T
@@ -38,7 +38,7 @@ def rhs_split2_twoterm(q: np.ndarray, Dr: np.ndarray, Ds: np.ndarray, J: np.ndar
 
 def rhs_split3_threeterm(q: np.ndarray, Dr: np.ndarray, Ds: np.ndarray, J: np.ndarray, u_r: np.ndarray, u_s: np.ndarray) -> np.ndarray:
     """
-    Split3 (Three-Term Split, Mass Conserving) Formulation RHS:
+    Split3 (Three-Term Split, Mass Conserving) Formulation Volume RHS:
         dq/dt = -0.5 * (1/J) * [ Dr*(J*u_r*q) + J*u_r*(Dr*q) + q*Dr*(J*u_r) + Ds*(J*u_s*q) + J*u_s*(Ds*q) + q*Ds*(J*u_s) ]
     """
     div_ur = (Dr @ (J * u_r).T).T
@@ -54,4 +54,3 @@ def rhs_split3_threeterm(q: np.ndarray, Dr: np.ndarray, Ds: np.ndarray, J: np.nd
     
     rhs_val = -0.5 * (term_r1 + term_r2 + term_r3 + term_s1 + term_s2 + term_s3) / J
     return rhs_val
-

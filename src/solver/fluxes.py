@@ -1,7 +1,10 @@
 """
-Interface Numerical Fluxes for Discontinuous Galerkin Methods.
+Interface Numerical Fluxes & Surface Trace Lifting Operators for SBP-DG.
 
-Provides Upwind (dissipative) and Central (non-dissipative) numerical flux formulations.
+Provides:
+1. Upwind and Central numerical flux functions.
+2. Full RHS evaluator incorporating interface penalty flux lifting to ensure
+   exact machine-precision discrete mass conservation (1e-16).
 """
 
 from __future__ import annotations
